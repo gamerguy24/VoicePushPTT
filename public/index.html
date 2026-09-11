@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14171c">
+  <title>Walkie</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📻</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="login" class="screen">
+    <form id="joinForm" class="card">
+      <h1>📻 Walkie</h1>
+      <p class="sub">Push-to-talk voice over WebRTC</p>
+      <label>Your name
+        <input id="nameInput" name="name" maxlength="32" autocomplete="nickname" required>
+      </label>
+      <label>Channel
+        <input id="channelInput" name="channel" maxlength="48" required placeholder="e.g. team-alpha">
+      </label>
+      <button type="submit" id="joinBtn">Join channel</button>
+      <p id="loginError" class="error" hidden></p>
+      <p class="hint">Everyone on the same channel hears whoever holds the button. Only one person can talk at a time.</p>
+    </form>
+  </main>
+
+  <main id="radio" class="screen" hidden>
+    <header class="topbar">
+      <div>
+        <div class="channel-name">#<span id="channelName"></span></div>
+        <div class="conn"><span id="connDot" class="dot"></span><span id="connText">Connecting…</span> · <span id="onlineCount">1</span> online</div>
+      </div>
+      <button id="leaveBtn" class="ghost">Leave</button>
+    </header>
+
+    <section class="ptt-area">
+      <div id="status" class="status">Ready</div>
+      <button id="ptt" class="ptt" type="button" aria-label="Push to talk">
+        <span class="ptt-icon">🎙️</span>
+        <span id="pttLabel" class="ptt-label">Hold to talk</span>
+      </button>
+      <div class="meter" aria-hidden="true"><div id="meterFill"></div></div>
+      <div class="options">
+        <label class="check"><input type="checkbox" id="toggleMode"> Tap to toggle</label>
+        <label class="volume">🔊 <input type="range" id="volume" min="0" max="1" step="0.05" value="1"></label>
+      </div>
+      <p class="hint">Tip: hold <kbd>Space</kbd> to talk on a keyboard.</p>
+    </section>
+
+    <section class="panel">
+      <h2>On channel</h2>
+      <ul id="members" class="members"></ul>
+    </section>
+
+    <section class="panel">
+      <h2>Recent</h2>
+      <ol id="log" class="log"></ol>
+    </section>
+
+    <div id="remoteAudio" hidden></div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Electron build output (installers, unpacked app, generated icon)
+electron/dist/
+electron/build/
+
+# Copy of serverless/walkie.html made by `npm run sync`
+electron/renderer/
+
+# Logs / OS files
+*.log
+.DS_Store
+Thumbs.db

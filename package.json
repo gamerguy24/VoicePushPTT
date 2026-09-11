@@ -1,0 +1,16 @@
+{
+  "name": "walkie-talkie",
+  "version": "1.0.0",
+  "description": "Push-to-talk walkie-talkie over WebRTC with channel-based floor control",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

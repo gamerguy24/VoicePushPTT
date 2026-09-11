@@ -1,0 +1,53 @@
+{
+  "name": "walkie-desktop",
+  "productName": "Walkie",
+  "version": "1.0.0",
+  "description": "Serverless push-to-talk walkie-talkie (WebRTC + Nostr) with a global PTT hotkey",
+  "main": "main.js",
+  "private": true,
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "sync": "node -e \"const fs=require('fs');fs.mkdirSync('renderer',{recursive:true});fs.copyFileSync('../serverless/walkie.html','renderer/walkie.html')\"",
+    "start": "npm run sync && node start.js",
+    "dist": "npm run sync && node icon.js build/icon.png 512 && electron-builder"
+  },
+  "build": {
+    "appId": "com.walkie.desktop",
+    "productName": "Walkie",
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.js",
+      "renderer/**"
+    ],
+    "asarUnpack": [
+      "node_modules/uiohook-napi/**"
+    ],
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "mac": {
+      "target": "dmg",
+      "category": "public.app-category.social-networking",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Walkie uses the microphone for push-to-talk."
+      }
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Network"
+    }
+  },
+  "dependencies": {
+    "uiohook-napi": "^1.5.5"
+  },
+  "devDependencies": {
+    "electron": "^44.3.0",
+    "electron-builder": "^26.15.3"
+  }
+}
