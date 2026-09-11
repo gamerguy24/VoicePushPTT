@@ -4,6 +4,7 @@
   "description": "Push-to-talk walkie-talkie over WebRTC with channel-based floor control",
   "main": "server.js",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "start": "node server.js"
   },

@@ -1,78 +1,107 @@
-# Walkie — push-to-talk over WebRTC
+# VoicePushPTT
 
-A Zello-style walkie-talkie that runs in the browser. Join a channel, hold the
-button (or <kbd>Space</kbd>), talk. Everyone on the channel hears you, and only
-one person can hold the channel at a time.
+**A free, open-source push-to-talk walkie-talkie for your PC, for everyone who's
+tired of the Zello PC app.**
 
-## Run it
+Hold a key, talk, and everyone on your channel hears you. There's no account to
+create and no server to run. Voice goes directly between people over encrypted
+WebRTC. The app itself is called **Walkie**.
+
+> VoicePushPTT is an independent project. It is not affiliated with, endorsed
+> by, or based on Zello. It was written from scratch and contains no Zello code.
+> "Zello" is a trademark of Zello Inc.
+
+## Why VoicePushPTT?
+
+- **No sign-up.** Pick a name and a channel and start talking.
+- **No central server.** People find each other through the public Nostr relay
+  network, then talk peer-to-peer. There's nothing to host or pay for.
+- **Desktop and browser.** A proper Windows desktop app, plus a single HTML file
+  that runs in any browser, including on phones. Both join the same channels.
+- **Open source (MIT).** Read it, change it, fork it, host it yourself.
+
+## Features
+
+- **Push-to-talk:** one talker per channel, with a talk-permit chirp, roger beep
+  and busy tone.
+- **Global talk key (desktop):** works while you're in any other app or game.
+  Use a keyboard key or a mouse side button.
+- **VOX:** voice-activated talking with an adjustable threshold and hang time.
+- **Satellite map:** opt-in location sharing, with a pin for each person that
+  pulses while they talk.
+- **Local history:** replay past transmissions. Kept only on your computer;
+  delete it any time or have it removed automatically after 1, 7 or 30 days.
+- **Channel passwords:** everyone on a channel must use the same one.
+- **Settings:** microphone and speaker choice, echo cancellation, noise
+  suppression, light and dark themes, notifications, start with Windows, and
+  running in the tray.
+
+## Get started
+
+### Desktop app (Windows, also macOS and Linux)
 
 ```bash
+cd electron
 npm install
-npm start          # http://localhost:8080
+npm start        # run from source
+npm run dist     # build an installer and a portable .exe into electron/dist/
 ```
 
-Open it in two browser tabs (or two devices), use the same channel name, and
-hold the big button.
+Default talk key: **F8**. Change it in ⚙ Settings › Controls. See
+[electron/README.md](electron/README.md) for details.
 
-### Using phones / other computers
+### Single file, any browser
 
-Browsers only allow microphone access on **HTTPS** or `localhost`. For other
-devices, pick one of these:
+Open [`serverless/walkie.html`](serverless/walkie.html) in Chrome, Edge,
+Firefox or Safari. Send the file to friends, or put it on any static host
+(GitHub Pages, Netlify, …) so phones can use it too. See
+[serverless/README.md](serverless/README.md).
 
-- **A tunnel (easiest):** `npx cloudflared tunnel --url http://localhost:8080`
-  (or ngrok) gives you a public `https://` URL.
-- **Your own certificate:** create one (e.g. with `mkcert`), then
-  ```bash
-  HTTPS_KEY=key.pem HTTPS_CERT=cert.pem npm start
-  ```
+### Server version
 
-Share a link like `https://your-host/?channel=team-alpha` to pre-fill the channel.
-
-## Configuration (environment variables)
-
-| Variable      | Default                              | Purpose                                   |
-|---------------|--------------------------------------|-------------------------------------------|
-| `PORT`        | `8080`                               | Listen port                               |
-| `MAX_TALK_MS` | `60000`                              | Longest single transmission before the server takes the floor back |
-| `ICE_SERVERS` | `[{"urls":"stun:stun.l.google.com:19302"}]` | JSON array passed to `RTCPeerConnection` |
-| `HTTPS_KEY` / `HTTPS_CERT` | —                       | Serve over HTTPS                          |
-
-Behind strict NATs or corporate firewalls, STUN isn't enough. Add a TURN server:
-
-```bash
-ICE_SERVERS='[{"urls":"stun:stun.l.google.com:19302"},{"urls":"turn:turn.example.com:3478","username":"u","credential":"p"}]' npm start
-```
+A classic client/server version with a small Node signaling server. See
+[SERVER.md](SERVER.md).
 
 ## How it works
 
 ```
- browser A ──┐  WebSocket: join / SDP+ICE relay / floor control  ┌── browser B
-             └────────────────► server.js ◄──────────────────────┘
- browser A ◄═════════════ WebRTC audio (Opus, DTLS-SRTP) ═════════════► browser B
+  You ──(encrypted connection offer)──►  public Nostr relays  ◄──(answer)── Friend
+  You ◄══════════ direct WebRTC: voice (Opus) + control messages ══════════► Friend
 ```
 
-- **Signaling (`server.js`)**: one small Node server serves the page and runs a
-  WebSocket at `/ws`. It tracks channels and members and relays SDP and ICE
-  between peers. Audio never goes through it.
-- **Mesh audio**: each member has a direct `RTCPeerConnection` to every other
-  member in the channel. The newcomer sends the offers and existing members
-  answer, so both sides never offer at once.
-- **Floor control**: pressing PTT sends `ptt-start`. The server grants the floor
-  if nobody else has it (`floor-granted`) or refuses (`floor-denied`, which
-  plays a busy tone), then tells everyone who is talking. The talker's mic
-  track is enabled only while they hold the floor. Listeners un-mute only the
-  current talker's audio.
-- **Tones**: the permit chirp, roger beep, busy and receive tones are made with
-  the Web Audio API, so the app needs no audio files.
-- Echo cancellation, noise suppression and auto-gain come from the browser's
-  `getUserMedia` audio processing. Opus is WebRTC's default voice codec.
+- The relays only help people find each other. Voice, push-to-talk messages and
+  locations go directly between browsers and are always encrypted.
+- Who holds the channel is decided without a server: every talk request carries
+  a timestamp, and every client picks the same winner.
+- Each person connects to everyone else on the channel, which works well for up
+  to about 8–10 people per channel.
 
-## Limits and next steps
+## Project layout
 
-- A full mesh works well up to about 8–10 people per channel. Larger channels
-  need an SFU (e.g. mediasoup, LiveKit or Janus): each client uploads once and
-  the server forwards the talker's audio.
-- There is no auth, and channels are open to anyone who knows the name. Add
-  login and per-channel passwords before exposing it publicly.
-- Messages are live only. Zello-style message history and replay would mean
-  recording each transmission (`MediaRecorder`) and storing it on the server.
+| Path | What it is |
+|------|------------|
+| `serverless/walkie.html` | The whole app in one file: UI, WebRTC, map, settings, history |
+| `electron/` | Desktop app: global talk key, tray, installers (uses `walkie.html`) |
+| `server.js`, `public/` | Server version (Node signaling server + web client) |
+
+## Contributing
+
+Issues and pull requests are welcome. The app's code lives in
+`serverless/walkie.html`. The desktop app copies it with `npm run sync`, so
+make changes there.
+
+## Notes
+
+- **Map key:** the map uses MapTiler. If you fork or host this project, get
+  your own free key at [maptiler.com](https://www.maptiler.com/) and replace
+  `MAP_STYLE` in `walkie.html`.
+- **Strict networks:** some corporate or mobile networks block direct
+  connections. Add a TURN server under *Advanced* on the join screen.
+
+## License
+
+[MIT](LICENSE) © 2026 gamerguy24
+
+Bundled libraries: [Trystero](https://github.com/dmotz/trystero) (MIT) and
+[MapLibre GL JS](https://maplibre.org/) (BSD-3-Clause). Map data © MapTiler
+© OpenStreetMap contributors.
